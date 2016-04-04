@@ -1,7 +1,11 @@
 rock_library(motion_controller
-    SOURCES Dummy.cpp
-    HEADERS Dummy.hpp)
-
-rock_executable(motion_controller_bin Main.cpp
-    DEPS motion_controller)
-
+    SOURCES
+            Controller.cpp
+            Ackermann.cpp
+    HEADERS MotionControllerTypes.hpp
+            Controller.hpp
+            Ackermann.hpp
+    DEPS_PKGCONFIG
+            base-types
+            trajectory_follower
+    )

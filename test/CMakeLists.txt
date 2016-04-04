@@ -1,3 +1,1 @@
-rock_testsuite(test_suite suite.cpp
-   test_Dummy.cpp
-   DEPS motion_controller)
+
