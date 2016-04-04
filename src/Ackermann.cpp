@@ -19,36 +19,57 @@ Eigen::Vector2d Ackermann::computeTurningCenter(const trajectory_follower::Motio
     double radius = std::abs(motionCommand.translation)/motionCommand.rotation;
     return Eigen::Vector2d(0., radius);
 }
- 
+
 double Ackermann::translateSpeedToRotation(const double &speed)
 {
     double surface = geometry.wheelRadius * 2 * M_PI;
     return speed / surface * M_PI;
 }
- 
+
 const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motion2D& motionCmd)
 {
     for (auto jointCmd: jointCmds)
     {
         resetJoint(jointCmd);
     }
-    
-    for (auto jointCmd: jointCmds)
-    {   
-        if (!jointCmd->isAllreadyRegistered())
+
+    for (auto jointActuator: jointActuators)
+    {
+        for (auto registeredJointCmd: jointActuator->getRegisteredJointCmds())
         {
-            continue;
+            base::JointState &jointState(joints[joints.mapNameToIndex(registeredJointCmd->getName())]);
+
+            switch (registeredJointCmd->getType())
+            {
+            case JointCmdType::Position:
+                if (jointState.position != 0)
+                {
+                    continue;
+                }
+                break;
+
+            case JointCmdType::Steering:
+                if (jointState.speed != 0)
+                {
+                    continue;
+                }
+                break;
+
+            default:
+                continue;
+            }
+
+            Eigen::Vector2d turningCenter = computeTurningCenter(motionCmd);
+            const Eigen::Vector2d &wheelPos = jointActuator->getPosition();
+            double turningAngle = computeTurningAngle(turningCenter, wheelPos);
+            jointState.position = turningAngle;
+            
+            double wheelSpeed = computeWheelspeed(turningCenter, wheelPos, motionCmd.rotation);
+            double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
+            jointState.speed = rotationalSpeed;
         }
-        
-        Eigen::Vector2d turningCenter = computeTurningCenter(motionCmd);
-        const Eigen::Vector2d &wheelPos = jointCmd->getJointActuator()->getPosition();
-        double turningAngle = computeTurningAngle(turningCenter, wheelPos);
-        double wheelSpeed = computeWheelspeed(turningCenter, wheelPos, motionCmd.rotation);
-        double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
-        
-        joints;
     }
-    
+
     return joints;
 }
 

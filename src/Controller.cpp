@@ -25,7 +25,7 @@ void JointActuator::registerJointCmd(JointCmd* jointCmd)
     registeredJointCmds.push_back(jointCmd);
 }
 
-bool JointCmd::isAllreadyRegistered()
+bool JointCmd::isRegistered()
 {
     if (jointActuator != nullptr)
     {
@@ -37,7 +37,7 @@ bool JointCmd::isAllreadyRegistered()
 
 void JointCmd::registerAt(JointActuator* jointActuator)
 {
-    if (!isAllreadyRegistered())
+    if (!isRegistered())
     {
         this->jointActuator->registerJointCmd(this);
         this->jointActuator = jointActuator;
