@@ -2,7 +2,7 @@
 
 namespace motion_controller {
 
-const JointCmd* JointActuator::getJointCmdForType(JointCmdType type)
+JointCmd* JointActuator::getJointCmdForType(JointCmdType type)
 {
     for (auto registeredJointCmd: registeredJointCmds)
     {

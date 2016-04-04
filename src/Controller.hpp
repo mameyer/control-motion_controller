@@ -29,7 +29,7 @@ public:
     {
     }
     
-    const JointCmd* getJointCmdForType(JointCmdType type);
+    JointCmd* getJointCmdForType(JointCmdType type);
     void registerJointCmd(JointCmd *jointCmd);
     inline const Eigen::Vector2d &getPosition() const { return position; };
     inline std::vector< JointCmd* > getRegisteredJointCmds() { return registeredJointCmds; };
@@ -52,7 +52,7 @@ public:
     
     void registerAt(JointActuator *jointActuator);
     bool isRegistered();
-    inline const std::string& getName() { return name; };
+    inline std::string getName() { return name; };
     inline JointCmdType getType() { return type; };
     inline const JointActuator *getJointActuator() { return jointActuator; };
 };
