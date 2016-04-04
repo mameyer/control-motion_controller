@@ -39,26 +39,6 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
         {
             base::JointState &jointState(joints[joints.mapNameToIndex(registeredJointCmd->getName())]);
 
-            switch (registeredJointCmd->getType())
-            {
-            case JointCmdType::Position:
-                if (jointState.position != 0)
-                {
-                    continue;
-                }
-                break;
-
-            case JointCmdType::Steering:
-                if (jointState.speed != 0)
-                {
-                    continue;
-                }
-                break;
-
-            default:
-                continue;
-            }
-
             Eigen::Vector2d turningCenter = computeTurningCenter(motionCmd);
             const Eigen::Vector2d &wheelPos = jointActuator->getPosition();
             double turningAngle = computeTurningAngle(turningCenter, wheelPos);
