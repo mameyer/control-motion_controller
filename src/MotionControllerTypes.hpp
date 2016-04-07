@@ -1,7 +1,31 @@
 #pragma once
 
+#include <base/Eigen.hpp>
+
 namespace motion_controller
 {
+   
+enum JointCmdType
+{
+    Position,
+    Speed
+};
+   
+enum DriveMode
+{
+    ModeAckermann,
+    ModeLateral,
+    ModeTurnOnSpot
+};
+
+enum WheelType
+{
+    WheelFrontLeft,
+    WheelFrontRight,
+    WheelRearLeft,
+    WheelRearRight,
+    WheelOther
+};
 
 struct Geometry
 {
@@ -31,6 +55,38 @@ struct Geometry
           wheelRadius(0),
           wheelMaxVel(0)
     {
+    }
+    
+    base::Vector2d getWheelPosition(WheelType wheelType)
+    {
+        base::Vector2d wheelPosition;
+        switch (wheelType)
+        {
+            case WheelFrontLeft:
+                wheelPosition.x() = wheelbase / 2;
+                wheelPosition.y() = axleTrack / 2;
+                break;
+                
+            case WheelFrontRight:
+                wheelPosition.x() = wheelbase / 2;
+                wheelPosition.y() = -axleTrack / 2;
+                break;
+                
+            case WheelRearLeft:
+                wheelPosition.x() = -wheelbase / 2;
+                wheelPosition.y() = axleTrack / 2;
+                break;
+                
+            case WheelRearRight:
+                wheelPosition.x() = -wheelbase / 2;
+                wheelPosition.y() = -axleTrack / 2;
+                break;
+                
+            default:
+                break;
+        }
+        
+        return wheelPosition;
     }
 };
 

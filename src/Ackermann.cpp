@@ -4,8 +4,13 @@ namespace motion_controller {
 
 double Ackermann::computeTurningAngle(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition)
 {
-    Eigen::Vector2d vec = turningCenter - wheelposition;
-    return atan2(vec.y(), vec.x());
+    Eigen::Vector2d vec = wheelposition - turningCenter;
+    std::cout << "wheelposition: " << wheelposition.transpose() << ", " << "turningCenter: " << turningCenter.transpose() << std::endl;
+    vec = Eigen::Rotation2Dd(M_PI/2) * vec;
+    std::cout << "vec: " << vec.transpose() << std::endl;
+    double angle = atan2(vec.y(), vec.x());
+    std::cout << "angle: " << angle << std::endl;
+    return angle;
 }
 
 double Ackermann::computeWheelspeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
@@ -28,32 +33,53 @@ double Ackermann::translateSpeedToRotation(const double &speed)
 
 const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motion2D& motionCmd)
 {
-    for (auto jointCmd: jointCmds)
-    {
-        resetJoint(jointCmd);
-    }
+    controllerBase->resetAllJoints();
+    base::samples::Joints &joints(controllerBase->getJoints());
 
-    for (auto jointActuator: jointActuators)
+    for (auto jointActuator: controllerBase->getJointActuators())
     {
         JointCmd* positionCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
-        JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Steering);
+        JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
 
         if (!positionCmd || !steeringCmd)
         {
             continue;
         }
-        
+
         base::JointState &positionJointState(joints[joints.mapNameToIndex(positionCmd->getName())]);
         base::JointState &steeringJointState(joints[joints.mapNameToIndex(steeringCmd->getName())]);
 
-        Eigen::Vector2d turningCenter = computeTurningCenter(motionCmd);
-        const Eigen::Vector2d &wheelPos = jointActuator->getPosition();
-        double turningAngle = computeTurningAngle(turningCenter, wheelPos);
-        positionJointState.position = turningAngle;
+        std::cout << "motionCmd.rotation: " << motionCmd.rotation << std::endl;
+        if (motionCmd.rotation > 0.01 || motionCmd.rotation < -0.01)
+        {
+            currentTurningCenter = computeTurningCenter(motionCmd);
+            Eigen::Vector2d wheelPos = jointActuator->getPosition();
+            std::cout << "wheelPos: " << wheelPos.transpose() << std::endl;
+            double turningAngle = computeTurningAngle(currentTurningCenter, wheelPos);
+            double turningAngleN = base::Angle::normalizeRad(turningAngle);
+            if (turningAngleN > M_PI/2 || turningAngleN <= -M_PI/2)
+            {
+                double intp;
+                const double side = copysign(M_PI/2, turningAngleN);
+                turningAngleN = -side + M_PI * modf((turningAngleN-side) / M_PI, &intp);
+            }
+            positionJointState.position = turningAngleN;
+            std::cout << "turningAngleN: " << turningAngleN << std::endl;
 
-        double wheelSpeed = computeWheelspeed(turningCenter, wheelPos, motionCmd.rotation);
-        double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
-        steeringJointState.speed = rotationalSpeed;
+            double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd.rotation);
+            double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
+            steeringJointState.speed = rotationalSpeed * (turningAngle != turningAngleN ? -1 : 1);
+            
+            if (motionCmd.translation < 0)
+            {
+                steeringJointState.speed *= -1.;
+            }
+        }
+        else
+        {
+            positionJointState.position = 0;
+            steeringJointState.speed = translateSpeedToRotation(motionCmd.translation);
+        }
     }
 
     return joints;

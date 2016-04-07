@@ -39,41 +39,37 @@ void JointCmd::registerAt(JointActuator* jointActuator)
 {
     if (!isRegistered())
     {
-        this->jointActuator->registerJointCmd(this);
         this->jointActuator = jointActuator;
+        this->jointActuator->registerJointCmd(this);
     }
 }
 
-const JointActuator& Controller::addJointActuator(const Eigen::Vector2d& position)
+JointActuator* ControllerBase::addJointActuator(const base::Vector2d& position)
 {
-    JointActuator *jointActuator = new JointActuator(position);
-    jointActuators.push_back(jointActuator);
-    return *jointActuator;
+    jointActuators.resize(jointActuators.size()+1);
+    jointActuators[jointActuators.size()-1] = new JointActuator(position);
+    return jointActuators.back();
 }
 
-const JointCmd& Controller::addJointCmd(const std::string& name, JointCmdType type)
+JointCmd* ControllerBase::addJointCmd(const std::string& name, JointCmdType type)
 {
     for (auto jointCmd: jointCmds)
     {
-        if (jointCmd->getType() == type)
+        if (jointCmd->getType() == type && jointCmd->getName() == name)
         {
-            if (jointCmd->getName() != name)
-            {
-                throw std::runtime_error("there is allready a joint of this type available.");
-            }
-
-            return *jointCmd;
+            throw std::runtime_error("there is allready a joint with the same name and type available.");
         }
     }
-
-    JointCmd *jointCmd = new JointCmd(name, type);
-    joints.names.push_back(name);
-    resetJoint(jointCmd);
-    jointCmds.push_back(jointCmd);
-    return *jointCmd;
+    
+    joints.resize(joints.size()+1);
+    joints.names[joints.size()-1] = name;
+    jointCmds.resize(jointCmds.size()+1);
+    jointCmds[jointCmds.size()-1] = new JointCmd(name, type);
+    resetJoint(jointCmds.back());
+    return jointCmds.back();
 }
 
-void Controller::resetJoint(JointCmd *jointCmd)
+void ControllerBase::resetJoint(JointCmd *jointCmd)
 {
     base::JointState &jointState(joints[joints.mapNameToIndex(jointCmd->getName())]);
     switch (jointCmd->getType())
@@ -82,12 +78,20 @@ void Controller::resetJoint(JointCmd *jointCmd)
         jointState.position = 0.;
         break;
 
-    case JointCmdType::Steering:
+    case JointCmdType::Speed:
         jointState.speed = 0.;
         break;
 
     default:
         break;
+    }
+}
+
+void ControllerBase::resetAllJoints()
+{
+    for (auto jointCmd: jointCmds)
+    {
+        resetJoint(jointCmd);
     }
 }
 
