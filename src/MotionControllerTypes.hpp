@@ -24,6 +24,8 @@ enum WheelType
     WheelFrontRight,
     WheelRearLeft,
     WheelRearRight,
+    WheelMidLeft,
+    WheelMidRight,
     WheelOther
 };
 
@@ -63,29 +65,42 @@ struct Geometry
         switch (wheelType)
         {
             case WheelFrontLeft:
-                wheelPosition.x() = wheelbase / 2;
-                wheelPosition.y() = axleTrack / 2;
-                break;
-                
-            case WheelFrontRight:
-                wheelPosition.x() = wheelbase / 2;
-                wheelPosition.y() = -axleTrack / 2;
-                break;
-                
+            case WheelMidLeft:
             case WheelRearLeft:
-                wheelPosition.x() = -wheelbase / 2;
-                wheelPosition.y() = axleTrack / 2;
+                wheelPosition.y() = axleTrack / 2 + scrubRadius;
                 break;
-                
+            
+            case WheelFrontRight:
+            case WheelMidRight:
             case WheelRearRight:
-                wheelPosition.x() = -wheelbase / 2;
-                wheelPosition.y() = -axleTrack / 2;
+                wheelPosition.y() = -axleTrack / 2 - scrubRadius;
                 break;
                 
             default:
                 break;
         }
         
+        switch (wheelType)
+        {
+            case WheelRearLeft:
+            case WheelRearRight:
+                wheelPosition.x() = -wheelbase / 2;
+                break;
+            
+            case WheelFrontLeft:
+            case WheelFrontRight:
+                wheelPosition.x() = wheelbase / 2;
+                break;
+                
+            case WheelMidLeft:    
+            case WheelMidRight:
+                wheelPosition.x() = 0.;
+                break;
+                
+            default:
+                break;
+        }
+    
         return wheelPosition;
     }
 };

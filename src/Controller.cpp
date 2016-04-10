@@ -48,6 +48,7 @@ JointActuator* ControllerBase::addJointActuator(const base::Vector2d& position)
 {
     jointActuators.resize(jointActuators.size()+1);
     jointActuators[jointActuators.size()-1] = new JointActuator(position);
+    std::cout << "addJointActuator: position = " << jointActuators.back()->getPosition().transpose() << std::endl;
     return jointActuators.back();
 }
 
@@ -93,6 +94,26 @@ void ControllerBase::resetAllJoints()
     {
         resetJoint(jointCmd);
     }
+}
+
+double Controller::translateSpeedToRotation(const double &speed)
+{
+    double surface = geometry.wheelRadius * 2 * M_PI;
+    return speed / surface * M_PI;
+}
+
+double Controller::computeTurningAngle(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition)
+{
+    Eigen::Vector2d vec = wheelposition - turningCenter;
+    vec = Eigen::Rotation2Dd(M_PI/2) * vec;
+    double angle = atan2(vec.y(), vec.x());
+    return angle;
+}
+
+double Controller::computeWheelspeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
+{
+    double radius = (turningCenter - wheelposition).norm();
+    return radius*targetRotation;
 }
 
 }

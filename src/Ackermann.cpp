@@ -2,33 +2,17 @@
 
 namespace motion_controller {
 
-double Ackermann::computeTurningAngle(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition)
+void Ackermann::setAckermannRatio(double ackermannRatio)
 {
-    Eigen::Vector2d vec = wheelposition - turningCenter;
-    std::cout << "wheelposition: " << wheelposition.transpose() << ", " << "turningCenter: " << turningCenter.transpose() << std::endl;
-    vec = Eigen::Rotation2Dd(M_PI/2) * vec;
-    std::cout << "vec: " << vec.transpose() << std::endl;
-    double angle = atan2(vec.y(), vec.x());
-    std::cout << "angle: " << angle << std::endl;
-    return angle;
-}
-
-double Ackermann::computeWheelspeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
-{
-    double radius = (turningCenter - wheelposition).norm();
-    return radius*targetRotation;
+    this->ackermannRatio = ackermannRatio;
+    turningCenterX = 0.5*geometry.wheelbase * (1 - 2*this->ackermannRatio);
+    std::cout << "setAckermannRatio: " << this->ackermannRatio << ", turningCenterX: " << turningCenterX << std::endl;
 }
 
 Eigen::Vector2d Ackermann::computeTurningCenter(const trajectory_follower::Motion2D& motionCommand)
 {
     double radius = std::abs(motionCommand.translation)/motionCommand.rotation;
-    return Eigen::Vector2d(0., radius);
-}
-
-double Ackermann::translateSpeedToRotation(const double &speed)
-{
-    double surface = geometry.wheelRadius * 2 * M_PI;
-    return speed / surface * M_PI;
+    return Eigen::Vector2d(turningCenterX, radius);
 }
 
 const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motion2D& motionCmd)
@@ -54,7 +38,6 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
         {
             currentTurningCenter = computeTurningCenter(motionCmd);
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
-            std::cout << "wheelPos: " << wheelPos.transpose() << std::endl;
             double turningAngle = computeTurningAngle(currentTurningCenter, wheelPos);
             double turningAngleN = base::Angle::normalizeRad(turningAngle);
             if (turningAngleN > M_PI/2 || turningAngleN <= -M_PI/2)
@@ -64,7 +47,6 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
                 turningAngleN = -side + M_PI * modf((turningAngleN-side) / M_PI, &intp);
             }
             positionJointState.position = turningAngleN;
-            std::cout << "turningAngleN: " << turningAngleN << std::endl;
 
             double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd.rotation);
             double rotationalSpeed = translateSpeedToRotation(wheelSpeed);

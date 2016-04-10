@@ -82,6 +82,11 @@ protected:
     Geometry geometry;
     ControllerBase *controllerBase;
     
+    double translateSpeedToRotation(const double &speed);
+    double computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition);
+    double computeWheelspeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
+                             const double &targetRotation);
+    
 public:
     Controller(const Geometry &geometry, ControllerBase *controllerBase)
         : geometry(geometry),
