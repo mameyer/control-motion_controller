@@ -84,12 +84,12 @@ struct Geometry
         {
             case WheelRearLeft:
             case WheelRearRight:
-                wheelPosition.x() = -wheelbase / 2;
+                wheelPosition.x() = -(wheelbase + wheelOffset) / 2;
                 break;
             
             case WheelFrontLeft:
             case WheelFrontRight:
-                wheelPosition.x() = wheelbase / 2;
+                wheelPosition.x() = (wheelbase + wheelOffset) / 2;
                 break;
                 
             case WheelMidLeft:    

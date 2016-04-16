@@ -17,25 +17,11 @@ const base::samples::Joints& Lateral::compute(const trajectory_follower::Motion2
     double y = motionCmd.rotation;
     double speed = translateSpeedToRotation(motionCmd.translation);
     
-    Eigen::Vector3d direction = Eigen::Vector3d(x,y,0);  
-    double rotation = base::Angle::vectorToVector(direction, Eigen::Vector3d::UnitX(), Eigen::Vector3d::UnitZ()).getRad();
-   
-    if (rotation > M_PI_2)
-    {
-        rotation -= M_PI;
-        //speed *= -1;
-    }
-    else if (rotation < -M_PI_2)
-    {
-        rotation += M_PI;
-        //speed *= -1;
-    }
+    Eigen::Vector2d direction(x,y);
     
-    if (base::isNaN(rotation))
-    {
-        rotation = 0;
-    }
-
+    double rotation = 0.;
+    computeTurningAngle(Eigen::Vector2d(0., 0.), direction, rotation);
+   
     for (auto jointActuator: controllerBase->getJointActuators())
     {
         JointCmd* positionCmd = jointActuator->getJointCmdForType(JointCmdType::Position);

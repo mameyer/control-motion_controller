@@ -61,10 +61,15 @@ protected:
     std::vector< JointActuator* > jointActuators;
     std::vector< JointCmd* > jointCmds;
     base::samples::Joints joints;
+    std::pair<double, double> wheelPositionAxisInvalidArea;
+    double maxRotationAngle;
     
 public:
     ControllerBase()
-    {   
+    {
+        wheelPositionAxisInvalidArea.first = base::unset<double>();
+        wheelPositionAxisInvalidArea.second = base::unset<double>();
+        maxRotationAngle = M_PI;
     }
     
     JointActuator* addJointActuator(const base::Vector2d &position);
@@ -74,16 +79,22 @@ public:
     inline std::vector< JointActuator* > getJointActuators() { return jointActuators; };
     inline std::vector< JointCmd* > getJointCmds() { return jointCmds; };
     inline base::samples::Joints& getJoints() { return joints; };
+    bool checkWheelPositionValid(const double &wheelPositionAxis);
+    inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
+    inline double getMaxRotationAngle() { return this->maxRotationAngle; };
 };
 
 class Controller 
 {  
 protected:
+    double ackermannRatio;
+    double turningCenterX;
+    
     Geometry geometry;
     ControllerBase *controllerBase;
     
     double translateSpeedToRotation(const double &speed);
-    double computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition);
+    bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
     double computeWheelspeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
                              const double &targetRotation);
     
@@ -92,8 +103,11 @@ public:
         : geometry(geometry),
           controllerBase(controllerBase)
     {
+        ackermannRatio = 0.5;
+        turningCenterX = 0;
     }
     
+    void setAckermannRatio(double ackermannRatio);
     virtual const base::samples::Joints& compute(const trajectory_follower::Motion2D &motionCmd) =0;
 };
     

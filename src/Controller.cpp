@@ -49,6 +49,27 @@ JointActuator* ControllerBase::addJointActuator(const base::Vector2d& position)
     jointActuators.resize(jointActuators.size()+1);
     jointActuators[jointActuators.size()-1] = new JointActuator(position);
     std::cout << "addJointActuator: position = " << jointActuators.back()->getPosition().transpose() << std::endl;
+
+    if (base::isUnset<double>(wheelPositionAxisInvalidArea.first))
+    {
+        wheelPositionAxisInvalidArea.first = std::numeric_limits< double >::max();
+    }
+
+    if (jointActuators.back()->getPosition().y() < wheelPositionAxisInvalidArea.first)
+    {
+        wheelPositionAxisInvalidArea.first = jointActuators.back()->getPosition().y();
+    }
+
+    if (base::isUnset<double>(wheelPositionAxisInvalidArea.second))
+    {
+        wheelPositionAxisInvalidArea.second = std::numeric_limits< double >::min();
+    }
+
+    if (jointActuators.back()->getPosition().y() > wheelPositionAxisInvalidArea.second)
+    {
+        wheelPositionAxisInvalidArea.second = jointActuators.back()->getPosition().y();
+    }
+
     return jointActuators.back();
 }
 
@@ -61,7 +82,7 @@ JointCmd* ControllerBase::addJointCmd(const std::string& name, JointCmdType type
             throw std::runtime_error("there is allready a joint with the same name and type available.");
         }
     }
-    
+
     joints.resize(joints.size()+1);
     joints.names[joints.size()-1] = name;
     jointCmds.resize(jointCmds.size()+1);
@@ -96,18 +117,45 @@ void ControllerBase::resetAllJoints()
     }
 }
 
+bool ControllerBase::checkWheelPositionValid(const double &wheelPositionAxis)
+{
+    if (!base::isUnset<double>(wheelPositionAxisInvalidArea.first) && !base::isUnset<double>(wheelPositionAxisInvalidArea.second))
+    {
+        if (wheelPositionAxis >= wheelPositionAxisInvalidArea.first && wheelPositionAxis <= wheelPositionAxisInvalidArea.second)
+        {
+            std::cout << "wheel position invalid." << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Controller::setAckermannRatio(double ackermannRatio)
+{
+    this->ackermannRatio = ackermannRatio;
+    turningCenterX = 0.5*geometry.wheelbase * (2*this->ackermannRatio-1);
+    std::cout << "setAckermannRatio: " << this->ackermannRatio << ", turningCenterX: " << turningCenterX << std::endl;
+}
+
 double Controller::translateSpeedToRotation(const double &speed)
 {
     double surface = geometry.wheelRadius * 2 * M_PI;
     return speed / surface * M_PI;
 }
 
-double Controller::computeTurningAngle(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition)
+bool Controller::computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle)
 {
+    bool changeDirection = false;
     Eigen::Vector2d vec = wheelposition - turningCenter;
     vec = Eigen::Rotation2Dd(M_PI/2) * vec;
-    double angle = atan2(vec.y(), vec.x());
-    return angle;
+    turningAngle = atan(vec.y()/vec.x());
+    if (std::signbit(turningAngle) != std::signbit(atan2(vec.y(), vec.x())))
+    {
+        changeDirection = true;
+    }
+
+    return changeDirection;
 }
 
 double Controller::computeWheelspeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
