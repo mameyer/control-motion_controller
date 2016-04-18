@@ -20,7 +20,7 @@ const base::samples::Joints& PointTurn::compute(const trajectory_follower::Motio
         base::JointState &positionJointState(joints[joints.mapNameToIndex(positionCmd->getName())]);
         base::JointState &steeringJointState(joints[joints.mapNameToIndex(steeringCmd->getName())]);
 
-        Eigen::Vector2d turningCenter(turningCenterX, 0.);
+        Eigen::Vector2d turningCenter(0., 0.);
         Eigen::Vector2d wheelPos = jointActuator->getPosition();
         bool changeDirection = computeTurningAngle(turningCenter, wheelPos, positionJointState.position);
         double wheelSpeed = computeWheelspeed(turningCenter, wheelPos, motionCmd.rotation);
