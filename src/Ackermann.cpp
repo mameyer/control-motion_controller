@@ -8,15 +8,13 @@ Eigen::Vector2d Ackermann::computeTurningCenter(const trajectory_follower::Motio
     return Eigen::Vector2d(turningCenterX, radius);
 }
 
-const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motion2D& motionCmd)
-{
-    controllerBase->resetAllJoints();
-    base::samples::Joints &joints(controllerBase->getJoints());
-    
+bool Ackermann::compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
+{   
     currentTurningCenter = computeTurningCenter(motionCmd);
     if (!controllerBase->checkWheelPositionValid(currentTurningCenter.y()))
     {
-        throw std::runtime_error("invalid rotation for ackermann.");
+        std::cout << "steering angle limits reached.." << std::endl;
+        return false;
     }
 
     for (auto jointActuator: controllerBase->getJointActuators())
@@ -29,8 +27,8 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
             continue;
         }
 
-        base::JointState &positionJointState(joints[joints.mapNameToIndex(positionCmd->getName())]);
-        base::JointState &steeringJointState(joints[joints.mapNameToIndex(steeringCmd->getName())]);
+        base::JointState &positionJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
+        base::JointState &steeringJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
 
         if (motionCmd.rotation > 0.01 || motionCmd.rotation < -0.01)
         {
@@ -38,7 +36,8 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, positionJointState.position);
             
             if (std::abs(positionJointState.position) > controllerBase->getMaxRotationAngle()) {
-                throw std::runtime_error("invalid rotation for ackermann.");
+                std::cout << "steering angle limits reached.." << std::endl;
+                return false;
             }
             
             double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd.rotation);
@@ -56,7 +55,7 @@ const base::samples::Joints& Ackermann::compute(const trajectory_follower::Motio
         }
     }
 
-    return joints;
+    return true;
 }
 
 }

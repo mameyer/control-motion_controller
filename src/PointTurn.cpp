@@ -2,11 +2,8 @@
 
 namespace motion_controller {
 
-const base::samples::Joints& PointTurn::compute(const trajectory_follower::Motion2D& motionCmd)
+bool PointTurn::compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
 {
-    controllerBase->resetAllJoints();
-    base::samples::Joints &joints(controllerBase->getJoints());
-
     for (auto jointActuator: controllerBase->getJointActuators())
     {
         JointCmd* positionCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
@@ -17,8 +14,8 @@ const base::samples::Joints& PointTurn::compute(const trajectory_follower::Motio
             continue;
         }
 
-        base::JointState &positionJointState(joints[joints.mapNameToIndex(positionCmd->getName())]);
-        base::JointState &steeringJointState(joints[joints.mapNameToIndex(steeringCmd->getName())]);
+        base::JointState &positionJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
+        base::JointState &steeringJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
 
         Eigen::Vector2d turningCenter(turningCenterX, 0.);
         Eigen::Vector2d wheelPos = jointActuator->getPosition();
@@ -33,7 +30,7 @@ const base::samples::Joints& PointTurn::compute(const trajectory_follower::Motio
         }
     }
 
-    return joints;
+    return true;
 }
 
 }

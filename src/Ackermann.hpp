@@ -18,7 +18,7 @@ public:
     
     inline Eigen::Vector2d getTurningCenter() { return currentTurningCenter; };
     inline double getAckermannRation() { return ackermannRatio; };
-    virtual const base::samples::Joints& compute(const trajectory_follower::Motion2D &motionCmd);
+    virtual bool compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand);
 };
     
 }

@@ -83,25 +83,21 @@ JointCmd* ControllerBase::addJointCmd(const std::string& name, JointCmdType type
         }
     }
 
-    joints.resize(joints.size()+1);
-    joints.names[joints.size()-1] = name;
     jointCmds.resize(jointCmds.size()+1);
     jointCmds[jointCmds.size()-1] = new JointCmd(name, type);
-    resetJoint(jointCmds.back());
     return jointCmds.back();
 }
 
-void ControllerBase::resetJoint(JointCmd *jointCmd)
+void ControllerBase::resetJoint(JointCmd *jointCmd, base::JointState &actuatorsState)
 {
-    base::JointState &jointState(joints[joints.mapNameToIndex(jointCmd->getName())]);
     switch (jointCmd->getType())
     {
     case JointCmdType::Position:
-        jointState.position = 0.;
+        actuatorsState.position = 0.;
         break;
 
     case JointCmdType::Speed:
-        jointState.speed = 0.;
+        actuatorsState.speed = 0.;
         break;
 
     default:
@@ -109,11 +105,15 @@ void ControllerBase::resetJoint(JointCmd *jointCmd)
     }
 }
 
-void ControllerBase::resetAllJoints()
+void ControllerBase::resetAllJoints(base::samples::Joints &actuatorsCmd)
 {
-    for (auto jointCmd: jointCmds)
+    actuatorsCmd.clear();
+    actuatorsCmd.resize(jointCmds.size());
+    
+    for (unsigned int i=0; i<jointCmds.size(); i++)
     {
-        resetJoint(jointCmd);
+        actuatorsCmd.names[i] = jointCmds.at(i)->getName();
+        resetJoint(jointCmds.at(i), actuatorsCmd[i]);
     }
 }
 

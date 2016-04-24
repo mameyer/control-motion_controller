@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <base/Eigen.hpp>
+#include <tuple>
 
 namespace motion_controller
 {
@@ -60,7 +61,6 @@ class ControllerBase
 protected:
     std::vector< JointActuator* > jointActuators;
     std::vector< JointCmd* > jointCmds;
-    base::samples::Joints joints;
     std::pair<double, double> wheelPositionAxisInvalidArea;
     double maxRotationAngle;
     
@@ -74,11 +74,10 @@ public:
     
     JointActuator* addJointActuator(const base::Vector2d &position);
     JointCmd* addJointCmd(const std::string &name, JointCmdType type);
-    void resetJoint(JointCmd *jointCmd);
-    void resetAllJoints();
+    void resetJoint(JointCmd *jointCmd, base::JointState &actuatorsState);
+    void resetAllJoints(base::samples::Joints &actuatorsCmd);
     inline std::vector< JointActuator* > getJointActuators() { return jointActuators; };
     inline std::vector< JointCmd* > getJointCmds() { return jointCmds; };
-    inline base::samples::Joints& getJoints() { return joints; };
     bool checkWheelPositionValid(const double &wheelPositionAxis);
     inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
     inline double getMaxRotationAngle() { return this->maxRotationAngle; };
@@ -108,7 +107,7 @@ public:
     }
     
     void setAckermannRatio(double ackermannRatio);
-    virtual const base::samples::Joints& compute(const trajectory_follower::Motion2D &motionCmd) =0;
+    virtual bool compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand) =0;
 };
     
 }
