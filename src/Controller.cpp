@@ -19,7 +19,7 @@ void JointActuator::registerJointCmd(JointCmd* jointCmd)
 {
     if (getJointCmdForType(jointCmd->getType()) != nullptr)
     {
-        std::runtime_error("joint with same type allready registered.");
+        std::runtime_error("joint with same type already registered.");
     }
 
     registeredJointCmds.push_back(jointCmd);

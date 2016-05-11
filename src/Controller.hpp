@@ -96,7 +96,6 @@ protected:
     bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
     double computeWheelspeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
                              const double &targetRotation);
-    
 public:
     Controller(const Geometry &geometry, ControllerBase *controllerBase)
         : geometry(geometry),
@@ -105,9 +104,11 @@ public:
         ackermannRatio = 0.5;
         turningCenterX = 0;
     }
+    virtual ~Controller(){
+    }
     
     void setAckermannRatio(double ackermannRatio);
-    virtual bool compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand) =0;
+    virtual bool compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand) = 0;
 };
     
 }
