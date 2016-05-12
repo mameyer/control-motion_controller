@@ -77,6 +77,7 @@ public:
     void resetJoint(JointCmd *jointCmd, base::JointState &actuatorsState);
     void resetAllJoints(base::samples::Joints &actuatorsCmd);
     inline std::vector< JointActuator* > getJointActuators() { return jointActuators; };
+    //void eachJoint(std::function<void(base::JointState&)>, std::function<void(base::JointState&)>);
     inline std::vector< JointCmd* > getJointCmds() { return jointCmds; };
     bool checkWheelPositionValid(const double &wheelPositionAxis);
     inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };

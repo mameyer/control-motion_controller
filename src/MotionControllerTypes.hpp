@@ -1,6 +1,7 @@
 #pragma once
 
 #include <base/Eigen.hpp>
+#include <base/Float.hpp>
 
 namespace motion_controller
 {
@@ -13,6 +14,7 @@ enum JointCmdType
    
 enum DriveMode
 {
+    Idle,
     ModeAckermann,
     ModeLateral,
     ModeTurnOnSpot
@@ -55,7 +57,7 @@ struct Geometry
           wheelOffset(0),
           scrubRadius(0),
           wheelRadius(0),
-          wheelMaxVel(0)
+          wheelMaxVel(base::unset<double>())
     {
     }
     

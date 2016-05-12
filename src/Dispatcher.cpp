@@ -1,11 +1,10 @@
 #include "Dispatcher.hpp"
 #include "trajectory_follower/Motion2D.hpp"
 
-using namespace motion_controller;
+namespace motion_controller {
 
 double Dispatcher::calcWheelSpeedWhenTurning()
 {
-
     double steeringSpeed = 0.5;
     double wheelSpeed = steeringSpeed * geometry.wheelRadius / geometry.scrubRadius ;
     return wheelSpeed;
@@ -13,93 +12,97 @@ double Dispatcher::calcWheelSpeedWhenTurning()
 
 base::samples::Joints Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)
 {
-    if (motionCmd.translation == 0 && motionCmd.rotation != 0) 
+    if (motionCmd.translation == 0 && motionCmd.rotation != 0)
     {
         pointTurn->compute(motionCmd, actuatorsCommand);
-
+        currentMode = ModeTurnOnSpot;
     }
     else if (motionCmd.rotation == 0)
     {
         lateral->compute(motionCmd, actuatorsCommand);
+        currentMode = ModeLateral;
     }
     else
     {
         if (!ackermann->compute(motionCmd, actuatorsCommand))
         {
             pointTurn->compute(motionCmd, actuatorsCommand);
+            currentMode = ModeTurnOnSpot;
+        }
+        else
+        {
+            currentMode = ModeAckermann;
         }
     }
-   std::cout << "Hallo?" << std::endl;
-   if(useFeedback)
+
+    bool isTooFast = false;
+    double maxSpeed = 0;
+
+    for (auto jointActuator: controllerBase->getJointActuators())
     {
-        std::cout << "WIR USEN FEEDBECK!" << std::endl;
-        bool needsToWaitForTurn = false;
+        JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
+        JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
+
+        if (!steeringCmd || !wheelCmd)
+        {
+            continue;
+        }
+
+        base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
+        base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
+
+        if (useFeedback)
+        {
+            base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
+            base::JointState &wheelJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(wheelCmd->getName())]);
+
+            double diff = std::abs(steeringJS.position - steeringJSFb.position);
+            if (diff > jointsFeedbackTurningThreshold)
+            {
+                if (diff > turningAngleThreshold / 2)
+                {
+                    wheelJS.speed = calcWheelSpeedWhenTurning();
+                    wheelJS.speed *= diff > 0 ? 1 : -1;
+                }
+                else
+                {
+                    wheelJS.speed = 0;
+                }
+            }
+        }
+
+        if (!base::isUnset<double>(geometry.wheelMaxVel))
+        {
+            isTooFast = std::abs(wheelJS.speed) > geometry.wheelMaxVel;
+            if (wheelJS.speed > maxSpeed)
+            {
+                maxSpeed = wheelJS.speed;
+            }
+        }
+    }
+
+    if (isTooFast)
+    {
+        double reduce = geometry.wheelMaxVel / maxSpeed;
+
         for (auto jointActuator: controllerBase->getJointActuators())
         {
-            JointCmd* positionCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
-            JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
+            JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
+            JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
 
-            if (!positionCmd || !steeringCmd)
+            if (!steeringCmd || !wheelCmd)
             {
                 continue;
             }
 
-            //base::JointState &speedJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
-            //base::JointState &speedJS_fb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(positionCmd->getName())]);
-            base::JointState &steerJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
-            base::JointState &steerJS_fb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
-            
-            if(steerJS.position != steerJS_fb.position){
-                needsToWaitForTurn = true;
-            }
-            
-        }
-        
-        
-       if(needsToWaitForTurn)
-        {
-            for (auto jointActuator: controllerBase->getJointActuators())
-            {
-                JointCmd* positionCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
-                JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
+            base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
+            base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-                if (!positionCmd || !steeringCmd)
-                {
-                    continue;
-                }
-
-                base::JointState &speedJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
-                base::JointState &speedJS_fb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(positionCmd->getName())]);
-                base::JointState &steerJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
-                base::JointState &steerJS_fb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
-                
-                double diff = std::abs(steerJS.position - steerJS_fb.position);
-                if(diff > magicAckermannThreshold / 2){
-                    speedJS.speed = calcWheelSpeedWhenTurning();
-                    speedJS.speed *= diff > 0 ? 1 : -1;
-                }else{
-                    speedJS.speed = 0;
-                }
-                
-            }
+            wheelJS.speed *= reduce;
         }
-        
-        
-    /*if(geometry.wheelMaxVel != 0)
-    {
-        bool isTooFast = false;
-        double softLimit = geometry.wheelMaxVel;
-        map.applyGroupwise(out,WHEEL_ONLY, [&isTooFast,&softLimit](base::JointState& state){isTooFast |= std::abs(state.speed) > softLimit;});
-        if(isTooFast)
-        {
-            double maxSpeed = 0;
-            map.applyGroupwise(out,WHEEL_ONLY, [&maxSpeed](base::JointState& state){maxSpeed = std::abs(state.speed) > maxSpeed ? std::abs(state.speed) : maxSpeed;});
-            double reduce = geometry.wheelMaxVel / maxSpeed;
-            std::cerr << "control/spacebot_motioncontroller: SPEED is over Limit! Reducing to " << reduce*100 << "%" << std::endl;
-            map.applyGroupwise(out,WHEEL_ONLY, [&reduce](base::JointState& state){state.speed *= reduce;});
-        }
-    }*/
     }
-   
-   return actuatorsCommand;
+
+    return actuatorsCommand;
+}
+
 }
