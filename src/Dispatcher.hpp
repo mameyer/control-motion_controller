@@ -13,18 +13,19 @@ class Dispatcher
 private:
     Geometry geometry;
     ControllerBase *controllerBase;
-    bool useFeedback = false;
+    bool useFeedback;
 
     motion_controller::Ackermann *ackermann;
     motion_controller::Lateral *lateral;
     motion_controller::PointTurn *pointTurn;
 
-    double turningAngleThreshold = 0.01;
-    double jointsFeedbackTurningThreshold = 0.1;
+    double turningAngleThreshold;
+    double jointsFeedbackTurningThreshold;
 
     double calcWheelSpeedWhenTurning();
     
     DriveMode currentMode;
+    ControllerStatus status;
 
 public:
     Dispatcher(const Geometry &geometry, ControllerBase *controllerBase, bool useFeedback)
@@ -32,7 +33,10 @@ public:
           controllerBase(controllerBase),
           useFeedback(useFeedback)
     {
-        currentMode = Idle;
+        turningAngleThreshold = 0.01;
+        jointsFeedbackTurningThreshold = 0.1;
+        currentMode = Unset;
+        status = Idle;
         ackermann = new motion_controller::Ackermann(geometry,controllerBase);
         lateral = new motion_controller::Lateral(geometry,controllerBase);
         pointTurn = new motion_controller::PointTurn(geometry,controllerBase);
@@ -50,8 +54,9 @@ public:
         pointTurn->setAckermannRatio(ackermannRatio);
     }
 
-    base::samples::Joints compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback);
+    void compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback);
     inline DriveMode getCurrentMode() { return this->currentMode; };
+    inline ControllerStatus getStatus() { return this->status; };
     inline motion_controller::Ackermann *getAckermannController() { return this->ackermann; };
 };
 

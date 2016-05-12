@@ -11,10 +11,17 @@ enum JointCmdType
     Position,
     Speed
 };
-   
-enum DriveMode
+
+enum ControllerStatus
 {
     Idle,
+    TooFast,
+    NeedsToWaitForTurn
+};
+
+enum DriveMode
+{
+    Unset,
     ModeAckermann,
     ModeLateral,
     ModeTurnOnSpot
