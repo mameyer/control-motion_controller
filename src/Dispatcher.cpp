@@ -10,35 +10,41 @@ double Dispatcher::calcWheelSpeedWhenTurning()
     return wheelSpeed;
 }
 
+bool isTurningCenterInside(){
+    
+}
+
 void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)
 {
     status = Idle;
-    
-    if (motionCmd.translation == 0 && motionCmd.rotation != 0)
-    {
-        pointTurn->compute(motionCmd, actuatorsCommand);
-        currentMode = ModeTurnOnSpot;
-    }
-    else if (motionCmd.rotation == 0)
-    {
-        lateral->compute(motionCmd, actuatorsCommand);
-        currentMode = ModeLateral;
-    }
-    else
-    {
-        if (!ackermann->compute(motionCmd, actuatorsCommand))
+  
+    if(motionCmd.translation != 0 && motionCmd.rotation != 0){
+        if (motionCmd.translation == 0 && motionCmd.rotation != 0)
         {
             pointTurn->compute(motionCmd, actuatorsCommand);
             currentMode = ModeTurnOnSpot;
         }
+        else if (motionCmd.rotation == 0)
+        {
+            lateral->compute(motionCmd, actuatorsCommand);
+            currentMode = ModeLateral;
+        }
         else
         {
-            currentMode = ModeAckermann;
+            if (!ackermann->compute(motionCmd, actuatorsCommand))
+            {
+                pointTurn->compute(motionCmd, actuatorsCommand);
+                currentMode = ModeTurnOnSpot;
+            }
+            else
+            {
+                currentMode = ModeAckermann;
+            }
         }
     }
 
-    bool isTooFast = false;
-    double maxSpeed = std::numeric_limits<double>::min();
+    volatile bool isTooFast = false, needsWaitForTurn = false;
+    double maxSpeed = 0;
 
     for (auto jointActuator: controllerBase->getJointActuators())
     {
@@ -53,42 +59,22 @@ void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::s
         base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
         base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-        if (useFeedback)
-        {
-            base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
-            
-            double diff = std::abs(steeringJS.position - steeringJSFb.position);
-            if (diff > jointsFeedbackTurningThreshold)
-            {
-                status = NeedsToWaitForTurn;
-                if (diff > turningAngleThreshold / 2)
-                {
-                    wheelJS.speed = calcWheelSpeedWhenTurning();
-                    wheelJS.speed *= diff > 0 ? 1 : -1;
-                }
-                else
-                {
-                    wheelJS.speed = 0;
-                }
-            }
-        }
+
 
         if (!base::isUnset<double>(geometry.wheelMaxVel) && geometry.wheelMaxVel > 0)
         {
-//             if (useFeedback)
-//             {
-//                 base::JointState &wheelJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(wheelCmd->getName())]);
-//                 isTooFast |= std::abs(wheelJSFb.speed) > geometry.wheelMaxVel;   
-//             }
-//             else
-            {
-                isTooFast |= std::abs(wheelJS.speed) > geometry.wheelMaxVel;
-            }
+        
+            isTooFast |= std::abs(wheelJS.speed) > geometry.wheelMaxVel;
             
-            if (wheelJS.speed > maxSpeed)
+            if (std::abs(wheelJS.speed) > maxSpeed)
             {
-                maxSpeed = wheelJS.speed;
+                maxSpeed = std::abs(wheelJS.speed);
             }
+        }
+        
+        if(useFeedback){
+            base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
+            needsWaitForTurn |= std::abs(steeringJSFb.position - steeringJS.position) > jointsFeedbackTurningThreshold;
         }
     }
 
@@ -96,7 +82,6 @@ void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::s
     {
         status = TooFast;
         double reduce = geometry.wheelMaxVel / maxSpeed;
-
         for (auto jointActuator: controllerBase->getJointActuators())
         {
             JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
@@ -108,8 +93,36 @@ void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::s
 
             base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-            std::cout << "control_motioncontroller: SPEED is over limit! Reducing to " << reduce*100 << "%" << std::endl;
+            std::cout << "control_motioncontroller: SPEED is over limit! Reducing by " << reduce*100 << "%" << std::endl;
             wheelJS.speed *= reduce;
+        }
+    }
+    
+    if(needsWaitForTurn){
+        for (auto jointActuator: controllerBase->getJointActuators())
+        {
+            JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
+            JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
+            
+            base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
+            base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
+            base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
+            
+            double diff = steeringJS.position - steeringJSFb.position;
+            status = NeedsToWaitForTurn;
+            if (std::abs(diff) > turningAngleThreshold / 2)
+            {
+                wheelJS.speed = calcWheelSpeedWhenTurning();
+                wheelJS.speed *= diff > 0 ? 1 : -1;
+                if(jointActuator->getPosition().y() > 0){
+                    //Left side has to turn the opposite way
+                    wheelJS.speed *= -1;
+                }
+            }
+            else
+            {
+                wheelJS.speed = 0;
+            }
         }
     }
 }

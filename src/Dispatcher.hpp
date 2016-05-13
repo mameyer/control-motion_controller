@@ -23,6 +23,7 @@ private:
     double jointsFeedbackTurningThreshold;
 
     double calcWheelSpeedWhenTurning();
+    bool isTurningCenterInside();
     
     DriveMode currentMode;
     ControllerStatus status;
