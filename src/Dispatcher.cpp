@@ -18,7 +18,7 @@ void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::s
 {
     status = Idle;
   
-    if(motionCmd.translation != 0 && motionCmd.rotation != 0){
+    if(motionCmd != trajectory_follower::Motion2D(0., 0., 0)){
         if (motionCmd.translation == 0 && motionCmd.rotation != 0)
         {
             pointTurn->compute(motionCmd, actuatorsCommand);
