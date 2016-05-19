@@ -11,7 +11,7 @@ double Dispatcher::calcWheelSpeedWhenTurning()
 }
 
 bool isTurningCenterInside(){
-    
+    return true;
 }
 
 void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)

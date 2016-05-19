@@ -24,7 +24,7 @@ bool PointTurn::compute(const trajectory_follower::Motion2D &motionCmd, base::sa
         double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
         steeringJointState.speed = rotationalSpeed;
 
-        if (motionCmd.translation < 0 ^ changeDirection)
+        if ((motionCmd.translation < 0) ^ changeDirection)
         {
             steeringJointState.speed *= -1.;
         }

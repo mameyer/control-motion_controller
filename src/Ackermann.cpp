@@ -43,7 +43,7 @@ bool Ackermann::compute(const trajectory_follower::Motion2D &motionCmd, base::sa
             double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd.rotation);
             double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
-            if (motionCmd.translation < 0 ^ changeDirection)
+            if ((motionCmd.translation < 0) ^ changeDirection)
             {
                 wheelJS.speed *= -1.;
             }
