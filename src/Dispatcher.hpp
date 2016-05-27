@@ -55,7 +55,7 @@ public:
         pointTurn->setAckermannRatio(ackermannRatio);
     }
 
-    void compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback);
+    void compute(const base::commands::Motion2D &motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback);
     inline DriveMode getCurrentMode() { return this->currentMode; };
     inline ControllerStatus getStatus() { return this->status; };
     inline motion_controller::Ackermann *getAckermannController() { return this->ackermann; };

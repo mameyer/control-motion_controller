@@ -2,7 +2,7 @@
 
 namespace motion_controller {
 
-bool Lateral::compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
+bool Lateral::compute(const base::commands::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
 {   
     double speed = translateSpeedToRotation(motionCmd.translation);
    
@@ -19,7 +19,7 @@ bool Lateral::compute(const trajectory_follower::Motion2D &motionCmd, base::samp
         base::JointState &positionJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
         base::JointState &steeringJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
         
-        positionJointState.position = motionCmd.heading;
+        positionJointState.position = motionCmd.heading.getRad();
         steeringJointState.speed = speed;
     }
 

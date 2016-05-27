@@ -13,7 +13,7 @@ public:
     {
     }
 
-    virtual bool compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand);
+    virtual bool compute(const base::commands::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand);
 };
 
 }

@@ -14,11 +14,11 @@ bool isTurningCenterInside(){
     return true;
 }
 
-void Dispatcher::compute(const trajectory_follower::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)
+void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)
 {
     status = Idle;
   
-    if(motionCmd != trajectory_follower::Motion2D(0., 0., 0)){
+    if(motionCmd != base::commands::Motion2D(0., 0., base::Angle::fromRad(0))){
         if (motionCmd.translation == 0 && motionCmd.rotation != 0)
         {
             pointTurn->compute(motionCmd, actuatorsCommand);

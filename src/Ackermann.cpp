@@ -2,13 +2,13 @@
 
 namespace motion_controller {
 
-Eigen::Vector2d Ackermann::computeTurningCenter(const trajectory_follower::Motion2D& motionCommand)
+Eigen::Vector2d Ackermann::computeTurningCenter(const base::commands::Motion2D& motionCommand)
 {
     double radius = std::abs(motionCommand.translation)/motionCommand.rotation;
     return Eigen::Vector2d(turningCenterX, radius);
 }
 
-bool Ackermann::compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
+bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples::Joints& actuatorsCommand)
 {   
     currentTurningCenter = computeTurningCenter(motionCmd);
     if (!controllerBase->checkWheelPositionValid(currentTurningCenter.y()))

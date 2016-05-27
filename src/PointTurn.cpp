@@ -2,7 +2,7 @@
 
 namespace motion_controller {
 
-bool PointTurn::compute(const trajectory_follower::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
+bool PointTurn::compute(const base::commands::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
 {
     for (auto jointActuator: controllerBase->getJointActuators())
     {
