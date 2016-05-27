@@ -1,5 +1,4 @@
 #include "Dispatcher.hpp"
-#include <trajectory_follower/Motion2D.hpp>
 
 namespace motion_controller {
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MotionControllerTypes.hpp"
-#include <trajectory_follower/Motion2D.hpp>
 #include "Ackermann.hpp"
 #include "Lateral.hpp"
 #include "PointTurn.hpp"

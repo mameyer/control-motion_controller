@@ -1,12 +1,12 @@
 #pragma once
 
 #include "MotionControllerTypes.hpp"
-#include <trajectory_follower/Motion2D.hpp>
 #include <base/samples/Joints.hpp>
 #include <map>
 #include <vector>
 #include <base/Eigen.hpp>
 #include <tuple>
+#include <base/commands/Motion2D.hpp>
 
 namespace motion_controller
 {
