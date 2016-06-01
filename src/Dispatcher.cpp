@@ -31,7 +31,7 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
         else
         {
             if (!ackermann->compute(motionCmd, actuatorsCommand))
-            {
+            {   
                 pointTurn->compute(motionCmd, actuatorsCommand);
                 currentMode = ModeTurnOnSpot;
             }
@@ -71,7 +71,8 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
             }
         }
         
-        if(useFeedback){
+        if (useFeedback)
+        {
             base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
             needsWaitForTurn |= std::abs(steeringJSFb.position - steeringJS.position) > jointsFeedbackTurningThreshold;
         }
@@ -97,7 +98,8 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
         }
     }
     
-    if(needsWaitForTurn){
+    if (needsWaitForTurn)
+    {
         for (auto jointActuator: controllerBase->getJointActuators())
         {
             JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
@@ -109,7 +111,7 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
             
             double diff = steeringJS.position - steeringJSFb.position;
             status = NeedsToWaitForTurn;
-            if (std::abs(diff) > turningAngleThreshold / 2)
+            if (std::abs(diff) > turningAngleThreshold)
             {
                 wheelJS.speed = calcWheelSpeedWhenTurning();
                 wheelJS.speed *= diff > 0 ? 1 : -1;

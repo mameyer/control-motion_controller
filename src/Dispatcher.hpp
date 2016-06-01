@@ -58,6 +58,25 @@ public:
     inline DriveMode getCurrentMode() { return this->currentMode; };
     inline ControllerStatus getStatus() { return this->status; };
     inline motion_controller::Ackermann *getAckermannController() { return this->ackermann; };
+    inline void setTurningAngleThreshold(const double &turningAngleThreshold)
+    {
+        if (turningAngleThreshold > this->jointsFeedbackTurningThreshold)
+        {
+            throw std::invalid_argument("wrong argument for turningAngleThreshold");
+        }
+            
+        this->turningAngleThreshold = turningAngleThreshold;
+    };
+    
+    inline void setJointsFeedbackTurningThreshold(const double &jointsFeedbackTurningThreshold)
+    {
+        if (jointsFeedbackTurningThreshold < this->turningAngleThreshold)
+        {
+            throw std::invalid_argument("wrong argument for jointsFeedbackTurningThreshold");
+        }
+        
+        this->jointsFeedbackTurningThreshold = jointsFeedbackTurningThreshold;
+    };
 };
 
 }
