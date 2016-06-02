@@ -15,6 +15,7 @@ enum JointCmdType
 enum ControllerStatus
 {
     Idle,
+    OK,
     TooFast,
     NeedsToWaitForTurn
 };

@@ -10,11 +10,12 @@ Eigen::Vector2d Ackermann::computeTurningCenter(const base::commands::Motion2D& 
 
 bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples::Joints& actuatorsCommand)
 {   
-    currentTurningCenter = computeTurningCenter(motionCmd);
+    base::commands::Motion2D motionCmd_u = motionCmd;
+    currentTurningCenter = computeTurningCenter(motionCmd_u);
     if (!controllerBase->checkWheelPositionValid(currentTurningCenter.y()))
     {
-        std::cout << "steering angle limits reached.." << std::endl;
-        return false;
+        motionCmd_u.translation = 0;
+        currentTurningCenter = computeTurningCenter(motionCmd_u);
     }
 
     for (auto jointActuator: controllerBase->getJointActuators())
@@ -30,7 +31,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
         base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
         base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-        if (motionCmd.rotation > 0.01 || motionCmd.rotation < -0.01)
+        if (motionCmd_u.rotation > 0.01 || motionCmd_u.rotation < -0.01)
         {
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
@@ -47,10 +48,10 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
                 maxRotationAngleReached = false;
             }
             
-            double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd.rotation);
+            double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
             double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
-            if ((motionCmd.translation < 0) ^ changeDirection)
+            if ((motionCmd_u.translation < 0) ^ changeDirection)
             {
                 wheelJS.speed *= -1.;
             }

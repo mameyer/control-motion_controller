@@ -13,32 +13,22 @@ bool isTurningCenterInside(){
     return true;
 }
 
+//actuatorsCommand needs to be configured and set to 0!
 void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback)
 {
     status = Idle;
   
     if(motionCmd != base::commands::Motion2D(0., 0., base::Angle::fromRad(0))){
-        if (motionCmd.translation == 0 && motionCmd.rotation != 0)
+        status = OK;
+        if (motionCmd.rotation != 0)
         {
-            pointTurn->compute(motionCmd, actuatorsCommand);
-            currentMode = ModeTurnOnSpot;
-        }
-        else if (motionCmd.rotation == 0)
-        {
-            lateral->compute(motionCmd, actuatorsCommand);
-            currentMode = ModeLateral;
+            ackermann->compute(motionCmd, actuatorsCommand);
+            currentMode = ModeAckermann;
         }
         else
         {
-            if (!ackermann->compute(motionCmd, actuatorsCommand))
-            {   
-                pointTurn->compute(motionCmd, actuatorsCommand);
-                currentMode = ModeTurnOnSpot;
-            }
-            else
-            {
-                currentMode = ModeAckermann;
-            }
+            lateral->compute(motionCmd, actuatorsCommand);
+            currentMode = ModeLateral;
         }
     }
 
