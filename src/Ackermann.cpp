@@ -36,18 +36,6 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
             
-            if ((maxRotationAngleReached && std::abs(steeringJS.position)+rotationMaxEpsilon > controllerBase->getMaxRotationAngle())
-                || std::abs(steeringJS.position) > controllerBase->getMaxRotationAngle())
-            {
-                maxRotationAngleReached = true;
-                std::cout << "steering angle limits reached.." << std::endl;
-                return false;
-            }
-            else
-            {
-                maxRotationAngleReached = false;
-            }
-            
             double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
             double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
