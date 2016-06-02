@@ -17,7 +17,6 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
         return false;
     }
 
-    bool maxRotationAngleReached = false;
     for (auto jointActuator: controllerBase->getJointActuators())
     {
         JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
