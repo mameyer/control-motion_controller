@@ -3,7 +3,6 @@
 #include "MotionControllerTypes.hpp"
 #include "Ackermann.hpp"
 #include "Lateral.hpp"
-#include "PointTurn.hpp"
 
 namespace motion_controller {
     
@@ -16,7 +15,6 @@ private:
 
     motion_controller::Ackermann *ackermann;
     motion_controller::Lateral *lateral;
-    motion_controller::PointTurn *pointTurn;
 
     double turningAngleThreshold;
     double jointsFeedbackTurningThreshold;
@@ -39,19 +37,16 @@ public:
         status = Idle;
         ackermann = new motion_controller::Ackermann(geometry,controllerBase);
         lateral = new motion_controller::Lateral(geometry,controllerBase);
-        pointTurn = new motion_controller::PointTurn(geometry,controllerBase);
     }
 
     ~Dispatcher() {
         delete ackermann;
         delete lateral;
-        delete pointTurn;
     }
 
     void setAckermannRatio(double ackermannRatio) {
         ackermann->setAckermannRatio(ackermannRatio);
         lateral->setAckermannRatio(ackermannRatio);
-        pointTurn->setAckermannRatio(ackermannRatio);
     }
 
     void compute(const base::commands::Motion2D &motionCmd, base::samples::Joints &actuatorsCommand, base::samples::Joints &actuatorsFeedback);

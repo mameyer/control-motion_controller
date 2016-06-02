@@ -4,7 +4,7 @@ namespace motion_controller {
 
 bool Lateral::compute(const base::commands::Motion2D &motionCmd, base::samples::Joints& actuatorsCommand)
 {   
-    double speed = translateSpeedToRotation(motionCmd.translation);
+    double speed = translateSpeedToWheelSpeed(motionCmd.translation);
    
     for (auto jointActuator: controllerBase->getJointActuators())
     {

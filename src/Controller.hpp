@@ -69,7 +69,7 @@ public:
     {
         wheelPositionAxisInvalidArea.first = base::unset<double>();
         wheelPositionAxisInvalidArea.second = base::unset<double>();
-        maxRotationAngle = M_PI;
+        maxRotationAngle = M_PI/2;
     }
     
     JointActuator* addJointActuator(const base::Vector2d &position);
@@ -80,8 +80,8 @@ public:
     //void eachJoint(std::function<void(base::JointState&)>, std::function<void(base::JointState&)>);
     inline std::vector< JointCmd* > getJointCmds() { return jointCmds; };
     bool checkWheelPositionValid(const double &wheelPositionAxis);
-    /*inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
-    inline double getMaxRotationAngle() { return this->maxRotationAngle; };*/
+    inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
+    inline double getMaxRotationAngle() { return this->maxRotationAngle; };
 };
 
 class Controller 
@@ -93,9 +93,9 @@ protected:
     Geometry geometry;
     ControllerBase *controllerBase;
     
-    double translateSpeedToRotation(const double &speed);
+    double translateSpeedToWheelSpeed(const double &speed);
     bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
-    double computeWheelspeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
+    double computeSpeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
                              const double &targetRotation);
 public:
     Controller(const Geometry &geometry, ControllerBase *controllerBase)

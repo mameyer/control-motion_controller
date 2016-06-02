@@ -12,7 +12,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
 {   
     base::commands::Motion2D motionCmd_u = motionCmd;
     currentTurningCenter = computeTurningCenter(motionCmd_u);
-    if (!controllerBase->checkWheelPositionValid(currentTurningCenter.y()))
+    if (!isTurningCenterInside())
     {
         motionCmd_u.translation = 0;
         currentTurningCenter = computeTurningCenter(motionCmd_u);
@@ -36,8 +36,8 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
             
-            double wheelSpeed = computeWheelspeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
-            double rotationalSpeed = translateSpeedToRotation(wheelSpeed);
+            double wheelSpeed = computeSpeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
+            double rotationalSpeed = translateSpeedToWheelSpeed(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
             if ((motionCmd_u.translation < 0) ^ changeDirection)
             {
@@ -47,7 +47,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
         else
         {
             steeringJS.position = 0;
-            wheelJS.speed = translateSpeedToRotation(motionCmd.translation);
+            wheelJS.speed = translateSpeedToWheelSpeed(motionCmd.translation);
         }
     }
 

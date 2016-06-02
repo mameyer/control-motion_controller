@@ -138,7 +138,7 @@ void Controller::setAckermannRatio(double ackermannRatio)
     std::cout << "setAckermannRatio: " << this->ackermannRatio << ", turningCenterX: " << turningCenterX << std::endl;
 }
 
-double Controller::translateSpeedToRotation(const double &speed)
+double Controller::translateSpeedToWheelSpeed(const double &speed)
 {
     double surface = geometry.wheelRadius * 2 * M_PI;
     return speed / surface * M_PI;
@@ -158,7 +158,7 @@ bool Controller::computeTurningAngle(const Eigen::Vector2d &turningCenter, const
     return changeDirection;
 }
 
-double Controller::computeWheelspeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
+double Controller::computeSpeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
 {
     double radius = (turningCenter - wheelposition).norm();
     return radius*targetRotation;
