@@ -80,8 +80,8 @@ public:
     //void eachJoint(std::function<void(base::JointState&)>, std::function<void(base::JointState&)>);
     inline std::vector< JointCmd* > getJointCmds() { return jointCmds; };
     bool checkWheelPositionValid(const double &wheelPositionAxis);
-    inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
-    inline double getMaxRotationAngle() { return this->maxRotationAngle; };
+    /*inline void setMaxRotationAngle(const double &maxRotationAngle) { this->maxRotationAngle = maxRotationAngle; };
+    inline double getMaxRotationAngle() { return this->maxRotationAngle; };*/
 };
 
 class Controller 
