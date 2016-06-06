@@ -24,8 +24,7 @@ enum DriveMode
 {
     Unset,
     ModeAckermann,
-    ModeLateral,
-    ModeTurnOnSpot
+    ModeLateral
 };
 
 enum WheelType

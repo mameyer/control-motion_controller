@@ -12,7 +12,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
 {   
     base::commands::Motion2D motionCmd_u = motionCmd;
     currentTurningCenter = computeTurningCenter(motionCmd_u);
-    if (!isTurningCenterInside())
+    if (isTurningCenterInside())
     {
         motionCmd_u.translation = 0;
         currentTurningCenter = computeTurningCenter(motionCmd_u);
