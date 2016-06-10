@@ -21,7 +21,7 @@ bool Lateral::compute(const base::commands::Motion2D &motionCmd, base::samples::
         
 
         positionJointState.position = motionCmd.heading.getRad();
-        steeringJointState.speed = translateSpeedToWheelSpeed(speed);
+        steeringJointState.speed = speed;
         if(motionCmd.heading.getRad() > M_PI){
             positionJointState.position -= M_PI;
             positionJointState.speed *= -1;

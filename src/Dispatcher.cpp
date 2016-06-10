@@ -49,13 +49,12 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
         base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
 
-        
         if(std::abs(steeringJS.position) > controllerBase->getMaxRotationAngle()){
-            steeringJS.position += M_PI;
-            steeringJS.position = fmod(steeringJS.position, M_PI*2);
+            steeringJS.position = steeringJS.position > controllerBase->getMaxRotationAngle() ? steeringJS.position - M_PI : steeringJS.position + M_PI;
+            steeringJS.position = fmod(steeringJS.position, M_PI);
             wheelJS.speed *= -1;
         }
-        
+       
 
         if (!base::isUnset<double>(geometry.wheelMaxVel) && geometry.wheelMaxVel > 0)
         {
@@ -91,13 +90,14 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
 
             base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-            std::cout << "control_motioncontroller: SPEED is over limit! Reducing by " << reduce*100 << "%" << std::endl;
+            std::cout << "control_motioncontroller: SPEED is over limit! Reducing to " << reduce*100 << "%" << std::endl;
             wheelJS.speed *= reduce;
         }
     }
     
     if (needsWaitForTurn)
     {
+        status = NeedsToWaitForTurn;
         for (auto jointActuator: controllerBase->getJointActuators())
         {
             JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
@@ -108,7 +108,6 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
             base::JointState &steeringJSFb(actuatorsFeedback[actuatorsFeedback.mapNameToIndex(steeringCmd->getName())]);
             
             double diff = steeringJS.position - steeringJSFb.position;
-            status = NeedsToWaitForTurn;
             if (std::abs(diff) > turningAngleThreshold)
             {
                 wheelJS.speed = calcWheelSpeedWhenTurning();
@@ -116,7 +115,13 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
                 if(jointActuator->getPosition().y() > 0){
                     //Left side has to turn the opposite way
                     wheelJS.speed *= -1;
+                }else{
+                    //To turn over the free side, and not to hit the bogies
+                    if(diff > controllerBase->getMaxRotationAngle()){
+                        wheelJS.speed *= -1;
+                    }
                 }
+                
             }
             else
             {
