@@ -19,8 +19,13 @@ bool Lateral::compute(const base::commands::Motion2D &motionCmd, base::samples::
         base::JointState &positionJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(positionCmd->getName())]);
         base::JointState &steeringJointState(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
         
+
         positionJointState.position = motionCmd.heading.getRad();
-        steeringJointState.speed = speed;
+        steeringJointState.speed = translateSpeedToWheelSpeed(speed);
+        if(motionCmd.heading.getRad() > M_PI){
+            positionJointState.position -= M_PI;
+            positionJointState.speed *= -1;
+        }
     }
 
     return true;

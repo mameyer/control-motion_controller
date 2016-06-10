@@ -31,7 +31,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
         base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
         base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
-        if (motionCmd_u.rotation > 0.01 || motionCmd_u.rotation < -0.01)
+        if (motionCmd_u.rotation != 0)
         {
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
@@ -43,11 +43,8 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
             {
                 wheelJS.speed *= -1.;
             }
-        }
-        else
-        {
-            steeringJS.position = 0;
-            wheelJS.speed = translateSpeedToWheelSpeed(motionCmd.translation);
+        }else{
+            throw new std::invalid_argument("Invalid Input for Ackermann, Rotation is Zero. [BUG] probably in Dispatcher");
         }
     }
 

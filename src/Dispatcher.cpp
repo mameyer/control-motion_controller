@@ -49,6 +49,13 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
         base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
 
 
+        
+        if(std::abs(steeringJS.position) > controllerBase->getMaxRotationAngle()){
+            steeringJS.position += M_PI;
+            steeringJS.position = fmod(steeringJS.position, M_PI*2);
+            wheelJS.speed *= -1;
+        }
+        
 
         if (!base::isUnset<double>(geometry.wheelMaxVel) && geometry.wheelMaxVel > 0)
         {
@@ -61,11 +68,6 @@ void Dispatcher::compute(const base::commands::Motion2D& motionCmd, base::sample
             }
         }
         
-        if(std::abs(steeringJS.position) > controllerBase->getMaxRotationAngle()){
-            steeringJS.position += M_PI;
-            steeringJS.position = fmod(steeringJS.position, M_PI*2);
-            wheelJS.speed *= -1;
-        }
         
         if (useFeedback)
         {
