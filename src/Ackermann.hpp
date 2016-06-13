@@ -11,13 +11,13 @@ private:
     Eigen::Vector2d computeTurningCenter(const base::commands::Motion2D &motionCommand);
     Eigen::Vector2d currentTurningCenter;
     bool maxRotationAngleReached;
-    bool isTurningCenterInside(){
-        if(std::abs(currentTurningCenter.y()) > geometry.axleTrack/2){
-            if(std::abs(currentTurningCenter.x()) > (geometry.wheelbase + geometry.wheelOffset) /2){
-                return true;
-            }
+    bool isTurningCenterInside(Eigen::Vector2d center){
+        if(std::abs(center.y()) > geometry.axleTrack/2){
+            return false;
+        }if(std::abs(center.x()) > (geometry.wheelbase + geometry.wheelOffset) /2){
+            return false;
         }
-        return false;
+        return true;
     }
     
 public:
