@@ -144,19 +144,6 @@ double Controller::translateSpeedToWheelSpeed(const double &speed)
     return speed / surface * M_PI;
 }
 
-bool Controller::computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle)
-{
-    bool changeDirection = false;
-    Eigen::Vector2d vec = wheelposition - turningCenter;
-    vec = Eigen::Rotation2Dd(M_PI/2) * vec;
-    turningAngle = atan(vec.y()/vec.x());
-    if (std::signbit(turningAngle) != std::signbit(atan2(vec.y(), vec.x())))
-    {
-        changeDirection = true;
-    }
-
-    return changeDirection;
-}
 
 double Controller::computeSpeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
 {

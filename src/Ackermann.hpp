@@ -7,6 +7,7 @@ namespace motion_controller {
 class Ackermann : public Controller
 {
 private:
+    bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
     Eigen::Vector2d computeTurningCenter(const base::commands::Motion2D &motionCommand);
     Eigen::Vector2d currentTurningCenter;
     bool maxRotationAngleReached;

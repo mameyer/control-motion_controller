@@ -94,7 +94,6 @@ protected:
     ControllerBase *controllerBase;
     
     double translateSpeedToWheelSpeed(const double &speed);
-    bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
     double computeSpeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
                              const double &targetRotation);
 public:
