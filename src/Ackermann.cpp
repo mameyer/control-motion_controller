@@ -52,7 +52,7 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
             
-            double wheelSpeed = computeSpeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
+            double wheelSpeed = computeSpeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);     //Wheelpos has to be computed in abhängigkeit der Drehung!
             double rotationalSpeed = translateSpeedToWheelSpeed(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
             if ((motionCmd_u.translation < 0) ^ changeDirection)
