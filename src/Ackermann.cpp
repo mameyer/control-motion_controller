@@ -24,6 +24,12 @@ Eigen::Vector2d Ackermann::computeTurningCenter(const base::commands::Motion2D& 
     return rot*vec;
 }
 
+double Ackermann::computeSpeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
+{
+    double radius = (turningCenter - wheelposition).norm();
+    return radius*targetRotation;
+}
+
 bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples::Joints& actuatorsCommand)
 {   
     base::commands::Motion2D motionCmd_u = motionCmd;
@@ -34,34 +40,46 @@ bool Ackermann::compute(const base::commands::Motion2D& motionCmd, base::samples
         currentTurningCenter = computeTurningCenter(motionCmd_u);
     }
 
-    for (auto jointActuator: controllerBase->getJointActuators())
+    if (motionCmd_u.rotation != 0)
     {
-        JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
-        JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
 
-        if (!steeringCmd || !wheelCmd)
+        for (auto jointActuator: controllerBase->getJointActuators())
         {
-            continue;
-        }
+            JointCmd* steeringCmd = jointActuator->getJointCmdForType(JointCmdType::Position);
+            JointCmd* wheelCmd = jointActuator->getJointCmdForType(JointCmdType::Speed);
 
-        base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
-        base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
+            if (!steeringCmd || !wheelCmd)
+            {
+                continue;
+            }
 
-        if (motionCmd_u.rotation != 0)
-        {
+            base::JointState &steeringJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(steeringCmd->getName())]);
+            base::JointState &wheelJS(actuatorsCommand[actuatorsCommand.mapNameToIndex(wheelCmd->getName())]);
+
+
             Eigen::Vector2d wheelPos = jointActuator->getPosition();
             bool changeDirection = computeTurningAngle(currentTurningCenter, wheelPos, steeringJS.position);
-            
-            double wheelSpeed = computeSpeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);     //Wheelpos has to be computed in abhängigkeit der Drehung!
+            wheelPos = jointActuator->getPrecisePosition(geometry.scrubRadius, steeringJS.position);
+            double wheelSpeed = computeSpeed(currentTurningCenter, wheelPos, motionCmd_u.rotation);
+            std::cout << steeringCmd->getName() << std::endl; 
+            if(std::abs(wheelPos.x()) < 0.001 && motionCmd_u.translation == 0){
+                //Weird bugfix of weird Speed difference
+                //Basically, when point turning, scrub radius is now applied in other direction
+                double scrub = wheelPos.y() > 0 ? -geometry.scrubRadius : geometry.scrubRadius;
+                Eigen::Vector2d wheeloffs(0, 2*scrub);
+                Eigen::Rotation2Dd rot(steeringJS.position);
+                wheeloffs = rot * wheeloffs;
+                wheelSpeed = computeSpeed(currentTurningCenter,  wheelPos + wheeloffs, motionCmd_u.rotation);
+            }
             double rotationalSpeed = translateSpeedToWheelSpeed(wheelSpeed);
             wheelJS.speed = rotationalSpeed;
             if ((motionCmd_u.translation < 0) ^ changeDirection)
             {
                 wheelJS.speed *= -1.;
             }
-        }else{
-            throw new std::invalid_argument("Invalid Input for Ackermann, Rotation is Zero. [BUG] probably in Dispatcher");
         }
+    }else{
+        throw new std::invalid_argument("Invalid Input for Ackermann, Rotation is Zero. [BUG] probably in Dispatcher");
     }
 
     return true;

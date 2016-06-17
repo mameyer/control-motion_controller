@@ -8,6 +8,8 @@ class Ackermann : public Controller
 {
 private:
     bool computeTurningAngle(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition, double &turningAngle);
+    double computeSpeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
+                        const double &targetRotation);
     Eigen::Vector2d computeTurningCenter(const base::commands::Motion2D &motionCommand);
     Eigen::Vector2d currentTurningCenter;
     bool maxRotationAngleReached;

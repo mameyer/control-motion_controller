@@ -48,7 +48,6 @@ JointActuator* ControllerBase::addJointActuator(const base::Vector2d& position)
 {
     jointActuators.resize(jointActuators.size()+1);
     jointActuators[jointActuators.size()-1] = new JointActuator(position);
-    std::cout << "addJointActuator: position = " << jointActuators.back()->getPosition().transpose() << std::endl;
 
     if (base::isUnset<double>(wheelPositionAxisInvalidArea.first))
     {
@@ -123,7 +122,6 @@ bool ControllerBase::checkWheelPositionValid(const double &wheelPositionAxis)
     {
         if (wheelPositionAxis >= wheelPositionAxisInvalidArea.first && wheelPositionAxis <= wheelPositionAxisInvalidArea.second)
         {
-            std::cout << "wheel position invalid." << std::endl;
             return false;
         }
     }
@@ -135,7 +133,6 @@ void Controller::setAckermannRatio(double ackermannRatio)
 {
     this->ackermannRatio = ackermannRatio;
     turningCenterX = 0.5*geometry.wheelbase * (2*this->ackermannRatio-1);
-    std::cout << "setAckermannRatio: " << this->ackermannRatio << ", turningCenterX: " << turningCenterX << std::endl;
 }
 
 double Controller::translateSpeedToWheelSpeed(const double &speed)
@@ -144,11 +141,5 @@ double Controller::translateSpeedToWheelSpeed(const double &speed)
     return speed / surface * M_PI;
 }
 
-
-double Controller::computeSpeed(const Eigen::Vector2d& turningCenter, const Eigen::Vector2d& wheelposition, const double& targetRotation)
-{
-    double radius = (turningCenter - wheelposition).norm();
-    return radius*targetRotation;
-}
 
 }

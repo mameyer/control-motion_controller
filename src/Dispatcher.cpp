@@ -4,7 +4,7 @@ namespace motion_controller {
 
 double Dispatcher::calcWheelSpeedWhenTurning()
 {
-    double steeringSpeed = 0.5;
+    double steeringSpeed = 0.55;
     double wheelSpeed = steeringSpeed * geometry.wheelRadius / geometry.scrubRadius ;
     return wheelSpeed;
 }

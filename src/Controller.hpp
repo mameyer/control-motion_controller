@@ -31,6 +31,13 @@ public:
     JointCmd* getJointCmdForType(JointCmdType type);
     void registerJointCmd(JointCmd *jointCmd);
     inline base::Vector2d getPosition() { return position; };
+    inline base::Vector2d getPrecisePosition(double scrubRadius, double steeringRotation){
+        double scrub = position.y() > 0 ? scrubRadius : -scrubRadius;
+        Eigen::Vector2d wheeloffs(0, scrub);
+        Eigen::Rotation2Dd rot(steeringRotation);
+        wheeloffs = rot * wheeloffs;
+        return position + wheeloffs;
+    }
     inline std::vector< JointCmd* > getRegisteredJointCmds() { return registeredJointCmds; };
 };
 
@@ -94,8 +101,6 @@ protected:
     ControllerBase *controllerBase;
     
     double translateSpeedToWheelSpeed(const double &speed);
-    double computeSpeed(const Eigen::Vector2d &turningCenter, const Eigen::Vector2d &wheelposition,
-                             const double &targetRotation);
 public:
     Controller(const Geometry &geometry, ControllerBase *controllerBase)
         : geometry(geometry),
